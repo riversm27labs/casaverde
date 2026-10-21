@@ -1,0 +1,21 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {mkdtemp,rm} from 'node:fs/promises';import os from 'node:os';import path from 'node:path';
+process.env.DATA_DIR=await mkdtemp(path.join(os.tmpdir(),'cv-test-'));const {handle}=await import('../server/handler.mjs');const {close,translate}=await import('../server/runtime.mjs');const origin='http://localhost:5173';let cookie='';
+async function call(route,method='GET',body,auth=true,extra={}){const headers={Origin:origin,...(auth&&cookie?{Cookie:cookie}:{}),...extra};if(body&&! (body instanceof FormData))headers['Content-Type']='application/json';return handle(new Request(origin+'/api/'+route,{method,headers,...(body?{body:body instanceof FormData?body:JSON.stringify(body)}:{})}));}
+async function j(...args){const r=await call(...args);return {status:r.status,data:await r.json()};}
+test('fluxo completo: senha própria, fotos, produtos, notas e preços',async()=>{
+assert.equal((await j('dashboard')).status,401);assert.equal((await j('dashboard','GET',null,false,{'oai-authenticated-user-id':'fake','oai-authenticated-user-email':'admin@localhost'})).status,401);
+let r=await call('auth/setup','POST',{password:'Casa-verde-teste-2026'});assert.equal(r.status,200);cookie=r.headers.get('set-cookie').split(';')[0];assert.equal((await j('me')).data.admin,true);assert.equal((await j('auth/setup','POST',{password:'outra-senha-valida'})).status,409);
+const form=new FormData();form.set('file',new File([new Uint8Array([137,80,78,71,13,10,26,10])],'foto.png',{type:'image/png'}));const image=(await j('upload','POST',form)).data.url;assert.match(image,/\/api\/images\//);assert.equal((await call(image.replace('/api/',''),'GET',null,false)).status,200);
+const id=crypto.randomUUID();assert.equal((await j('quick-publish','POST',{requestId:id,image})).status,200);assert.equal((await j('catalog','GET',null,false)).data.products.length,1);
+const invoice={reference:'NFE-TESTE-001',supplier:'Teste',supplierCnpj:'12345678000123'};const product={id:crypto.randomUUID(),name:'Vaso importado',code:'V1',gtin:'7891234567895',quantity:2,unitCost:20,sourceItem:'1',images:[image]};
+assert.equal((await j('invoice-import','POST',{invoice,products:[product],reviewed:true})).data.processed,1);assert.equal((await j('invoice-import','POST',{invoice,products:[product],reviewed:true})).data.skipped,1);
+assert.equal((await j('pricing/'+product.id,'POST',{unitCost:20,target:2,mode:'factor'})).data.price,40);
+const cat=(await j('catalog','GET',null,false)).data;const pub=cat.products.find(p=>p.id===product.id);assert.equal(pub.price,40);for(const k of ['unitCost','supplier','lastInvoice','pricing','quantityReceived'])assert.equal(pub[k],undefined);
+assert.equal((await j('invoice-import','POST',{invoice:{...invoice,reference:'NFE-TESTE-002'},products:[{...product,quantity:3,unitCost:25}],reviewed:true})).status,200);const saved=(await j('dashboard')).data.products.find(p=>p.id===product.id);assert.equal(saved.quantityReceived,5);assert.equal(saved.unitCost,25);assert.equal(saved.price,40);
+const doc=new FormData();doc.set('file',new File(['%PDF-1.4\nTESTE'],'nota.pdf'));const key=(await j('invoice-documents','POST',doc)).data.key;assert.equal((await call('invoice-documents/'+key,'GET',null,false)).status,401);assert.equal((await call('invoice-documents/'+key)).status,200);
+const csrf=await call('products','POST',{name:'x'},true,{Origin:'https://evil.example'});assert.equal(csrf.status,403);
+assert.equal((await j('inquiries','POST',{name:'Cliente',phone:'63999999999',message:'Quero um vaso'},false)).status,200);
+const logout=await call('auth/logout');assert.match(logout.headers.get('set-cookie'),/Max-Age=0/);
+await close();await rm(process.env.DATA_DIR,{recursive:true,force:true});
+});
+test('tradução parametrizada PostgreSQL e isolamento por schema',()=>{assert.equal(translate('SELECT data FROM records WHERE id=?'), 'SELECT data FROM "cv_casaverde".records WHERE id=$1');assert.match(translate("SELECT data FROM records WHERE json_extract(data,'$.invoiceId')=?"),/data::jsonb/);});

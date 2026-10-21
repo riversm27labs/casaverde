@@ -1,0 +1,15 @@
+CASA VERDE — LOJA E ADMIN JUNTOS
+
+1. Extraia o CONTEÚDO do ZIP em C:\dev\sitecasaverde.
+2. Dê dois cliques em INICIAR-CASA-VERDE.bat.
+3. Abra http://localhost:5173.
+4. Clique em Administrar loja. No primeiro acesso, crie sua senha.
+5. Deixe a janela do servidor aberta enquanto usa o site.
+
+Requisito: Node.js 22.13 ou superior. O uso local não precisa de npm install.
+Banco e fotos locais ficam na pasta .data. Não apague essa pasta após cadastrar produtos.
+
+Loja e painel são uma única aplicação. O painel abre em /admin.
+Não há senha padrão nem dependência de login ChatGPT.
+
+Publicação na Vercel: o código está preparado para Supabase, mas é necessário configurar sua conta, banco e variáveis conforme README.md. O pacote não contém credenciais e não publica sozinho. O hub R2TI é separado e não está incluído neste pacote.

@@ -1,0 +1,5 @@
+import {readFile,writeFile,mkdir,cp,rm} from 'node:fs/promises';
+import {pathToFileURL} from 'node:url';
+export async function build(){await rm('dist',{recursive:true,force:true});await mkdir('dist/admin',{recursive:true});await mkdir('dist/login',{recursive:true});await cp('public','dist',{recursive:true});
+for(const [name,out]of [['store','dist/index.html'],['admin','dist/admin/index.html']]){let html=await readFile(name+'.html','utf8'),js=await readFile(name+'.js','utf8');if(name==='admin')for(const f of ['bulk','pricing','invoice'])js+='\n'+await readFile(f+'.js','utf8');html=html.replace('</body>','<script>'+js+'</script></body>');await writeFile(out,html);}await cp('login.html','dist/login/index.html');console.log('Loja, painel, login e arquivos preparados em dist.');}
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)await build();
