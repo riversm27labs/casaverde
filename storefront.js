@@ -155,7 +155,7 @@ function applySettings(result) {
   if (companyInfo.length) $('#store-info').innerHTML = [settings.address,settings.hours].filter(Boolean).map(text => `<p>${esc(text)}</p>`).join('');
   if (/^55\d{10,11}$/.test(settings.whatsapp)) {
     const link = 'https://wa.me/' + settings.whatsapp;
-    $('#whatsapp').href = link; $('#whatsapp').hidden = false;
+    $('#whatsapp').href = link; $('#whatsapp').hidden = false; document.body.insertAdjacentHTML("beforeend", `<div class="float-contact"><a class="float-btn float-wa" href="${link}" target="_blank" rel="noopener" aria-label="Conversar no WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z"/><path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.5-2-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2z"/></svg><span>WhatsApp</span></a>${settings.instagram?.startsWith("https://") ? `<a class="float-btn float-ig" href="${esc(settings.instagram)}" target="_blank" rel="noopener" aria-label="Abrir Instagram"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" class="dot"/></svg><span>Instagram</span></a>` : ""}</div>`);
     $('#store-info').insertAdjacentHTML('beforeend', `<a href="${link}" target="_blank" rel="noopener">WhatsApp da loja ↗</a>`);
   }
   if (settings.instagram?.startsWith('https://')) document.querySelectorAll('.ig-slot').forEach(element => element.innerHTML = `<a href="${esc(settings.instagram)}" target="_blank" rel="noopener">Instagram ↗</a>`);
