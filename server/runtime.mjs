@@ -7,7 +7,7 @@ const schema=process.env.STORE_SCHEMA||'cv_casaverde';
 if(!/^cv_[a-z0-9_]{1,50}$/.test(schema))throw Error('STORE_SCHEMA inválido');
 let database,pg;
 export async function init(){
- if(process.env.DATABASE_URL){for(const key of ['SUPABASE_URL','SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY','OWNER_EMAIL'])if(!process.env[key])throw Error('Configure '+key);const {default:postgres}=await import('postgres');pg=postgres(process.env.DATABASE_URL,{max:3,prepare:false,ssl:process.env.DATABASE_SSL==='false'?false:'require'});}
+ if(process.env.DATABASE_URL){for(const key of ['SUPABASE_URL','SUPABASE_ANON_KEY','SUPABASE_SERVICE_ROLE_KEY','OWNER_EMAIL'])if(!process.env[key])throw Error('Configure '+key);const {default:postgres}=await import('postgres');pg=postgres(process.env.DATABASE_URL,{max:3,prepare:false,connect_timeout:10,idle_timeout:5,max_lifetime:300,ssl:process.env.DATABASE_SSL==='false'?false:'require'});}
  else {if(process.env.VERCEL)throw Error('Configure DATABASE_URL, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY e OWNER_EMAIL.');await mkdir(dataDir,{recursive:true});const {DatabaseSync}=await import('node:sqlite');database=new DatabaseSync(path.join(dataDir,'casa-verde.sqlite'));database.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,kind TEXT NOT NULL,data TEXT NOT NULL,created INTEGER NOT NULL); CREATE TABLE IF NOT EXISTS admins(email TEXT PRIMARY KEY,user_id TEXT);');}
 }
 export function translate(sql){
