@@ -1,0 +1,14 @@
+{
+  "notice": "DEMONSTRAÇÃO — NÃO DISPONÍVEL PARA COMPRA",
+  "source": "Imagens ilustrativas geradas com imagegen para demonstração. Não representam produtos disponíveis.",
+  "items": [
+    {"id":"demo-vaso-marfim","name":"Vaso Canelado Marfim","category":"Vasos decorativos","image":"/demo/vaso-canelado-marfim.png","description":"Modelo ilustrativo em cerâmica de tom marfim, com superfície canelada e formas arredondadas. Sem medidas ou especificações comerciais confirmadas."},
+    {"id":"demo-vaso-terracota","name":"Vaso Terracota Natural","category":"Vasos decorativos","image":"/demo/vaso-terracota.png","description":"Modelo ilustrativo de vaso em terracota, com acabamento natural e borda arredondada. Uma referência visual para ambientes acolhedores."},
+    {"id":"demo-vaso-salvia","name":"Vaso Cilíndrico Sálvia","category":"Vasos decorativos","image":"/demo/vaso-verde-salvia.png","description":"Modelo ilustrativo em verde-sálvia, com linhas cilíndricas e prato coordenado. Composição demonstrativa, sem disponibilidade comercial."},
+    {"id":"demo-vaso-areia","name":"Vaso Orgânico Areia","category":"Vasos decorativos","image":"/demo/vaso-pedra-areia.png","description":"Modelo ilustrativo de cerâmica de aspecto mineral, em tom areia e silhueta orgânica. Texturas e proporções são apenas referências visuais."},
+    {"id":"demo-monstera","name":"Costela-de-adão","category":"Plantas ornamentais","image":"/demo/planta-costela-de-adao.png","description":"Representação ilustrativa de uma costela-de-adão em vaso decorativo. Exemplar, porte, vaso e composição não correspondem a um item à venda."},
+    {"id":"demo-zamioculca","name":"Zamioculca","category":"Plantas ornamentais","image":"/demo/planta-zamioculca.png","description":"Representação ilustrativa de zamioculca com folhagem verde e porte vertical. Modelo demonstrativo para explorar o visual da loja."},
+    {"id":"demo-espada","name":"Espada-de-são-jorge","category":"Plantas ornamentais","image":"/demo/planta-espada-de-sao-jorge.png","description":"Representação ilustrativa de espada-de-são-jorge, com folhas alongadas e vaso claro. Sem preço, estoque ou especificações de venda."},
+    {"id":"demo-jiboia","name":"Jiboia Verde","category":"Plantas ornamentais","image":"/demo/planta-jiboia.png","description":"Representação ilustrativa de jiboia com folhagem pendente em vaso claro. Composição fictícia, apresentada somente como demonstração visual."}
+  ]
+}

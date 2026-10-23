@@ -1,0 +1,53 @@
+{
+  "purpose": "Casa Verde — demonstração sem venda",
+  "assets": [
+    {
+      "file": "vaso-canelado-marfim.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Single matte warm ivory ceramic round pot, vertical fluting, empty, off-white cream studio, natural soft shadow. No branding or text. Fictional demonstration product."
+    },
+    {
+      "file": "vaso-terracota.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Create one square premium ecommerce demonstration catalog photograph: an empty terracotta tapered planter with elegant rounded lip, earthy burnt orange natural clay, centered. Soft off-white cream studio background, soft natural side lighting, realistic fine textures, subtle warm shadow, whole object centered with comfortable margins, sophisticated botanical home decor catalog. No text, no watermark, no branding, no other objects. This is a fictional illustrative demonstration item, not an available real product."
+    },
+    {
+      "file": "vaso-verde-salvia.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Create one square premium ecommerce demonstration catalog photograph: an empty sage green glazed ceramic cylinder planter with slim matching saucer, subtle glaze detail. Soft off-white cream studio background, soft natural side lighting, realistic fine textures, subtle warm shadow, whole object centered with comfortable margins, sophisticated botanical home decor catalog. No text, no watermark, no branding, no other objects. This is a fictional illustrative demonstration item, not an available real product."
+    },
+    {
+      "file": "vaso-pedra-areia.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Create one square premium ecommerce demonstration catalog photograph: an empty sculptural low rounded planter in speckled sand beige stoneware, organic curved silhouette. Soft off-white cream studio background, soft natural side lighting, realistic fine textures, subtle warm shadow, whole object centered with comfortable margins, sophisticated botanical home decor catalog. No text, no watermark, no branding, no other objects. This is a fictional illustrative demonstration item, not an available real product."
+    },
+    {
+      "file": "planta-costela-de-adao.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Create one square premium ecommerce demonstration catalog photograph: a lush monstera deliciosa ornamental plant with beautiful fenestrated glossy green leaves in a simple matte cream nursery pot. Soft off-white cream studio background, soft natural side lighting, realistic fine textures, subtle warm shadow, whole object centered with comfortable margins, sophisticated botanical home decor catalog. No text, no watermark, no branding, no other objects. This is a fictional illustrative demonstration item, not an available real product."
+    },
+    {
+      "file": "planta-zamioculca.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Create one square premium ecommerce demonstration catalog photograph: a healthy ornamental zamioculcas zamiifolia plant, upright dark glossy oval foliage in a sand beige pot. Soft off-white cream studio background, soft natural side lighting, realistic fine textures, subtle warm shadow, whole object centered with comfortable margins, sophisticated botanical home decor catalog. No text, no watermark, no branding, no other objects. This is a fictional illustrative demonstration item, not an available real product."
+    },
+    {
+      "file": "planta-espada-de-sao-jorge.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Create one square premium ecommerce demonstration catalog photograph: a sansevieria ornamental plant, upright architectural green striped sword leaves with light yellow edges in a simple light grey pot. Soft off-white cream studio background, soft natural side lighting, realistic fine textures, subtle warm shadow, whole object centered with comfortable margins, sophisticated botanical home decor catalog. No text, no watermark, no branding, no other objects. This is a fictional illustrative demonstration item, not an available real product."
+    },
+    {
+      "file": "planta-jiboia.png",
+      "tool": "image_gen built-in",
+      "type": "AI-generated illustrative demonstration, not real inventory",
+      "prompt": "Use case: product-mockup. Create one square premium ecommerce demonstration catalog photograph: a lush pothos ornamental plant, heart shaped green variegated foliage gently trailing down from a cream ceramic pot. Soft off-white cream studio background, soft natural side lighting, realistic fine textures, subtle warm shadow, whole object centered with comfortable margins, sophisticated botanical home decor catalog. No text, no watermark, no branding, no other objects. This is a fictional illustrative demonstration item, not an available real product."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+.git/
+.data/
+.tmp/
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.aws/
+.agents/
+.codex/
+debug.log

@@ -1,11 +1,13 @@
 import { env } from './runtime.mjs';
 import { invoiceAPI } from './invoice-api.mjs';
 import { canBindInvited } from './auth.mjs';
+import { publicServiceAPI, adminServiceAPI } from './service-api.mjs';
 const OWNER = process.env.OWNER_EMAIL?.toLowerCase() || 'admin@localhost';
 const json = (v, status = 200) => Response.json(v, { status, headers: { 'Cache-Control': 'no-store' } });
 const db = () => env.DB;
+function publicProduct(x) { return Object.fromEntries(['id','created','name','description','category','images','price','stock','dimensions','material','featured','published'].map(k=>[k,x[k]])); }
 async function rows(kind) { const r = await db().prepare('SELECT id,data,created FROM records WHERE kind=? ORDER BY created DESC').bind(kind).all(); return r.results.map((x) => ({ ...JSON.parse(x.data), id: x.id, created: x.created })); }
-async function settings() { const r = await db().prepare("SELECT data FROM records WHERE id='settings'").first(); return { ...{ name: 'Casa Verde', headline: 'A natureza. Em sua melhor forma.', description: 'Vasos que são presença. Jardins que acolhem. Transforme sua casa em um lugar onde a vida floresce.', whatsapp: '', address: '', hours: '', instagram: '', categories: ['Vasos ornamentais', 'Plantas', 'Composições verdes', 'Acessórios'], adminEmails: [] }, ...(r ? JSON.parse(r.data) : {}) }; }
+async function settings() { const r = await db().prepare("SELECT data FROM records WHERE id='settings'").first(); return { ...{ demoShowcase: true, name: 'Casa Verde', headline: 'A natureza. Em sua melhor forma.', description: 'Vasos que são presença. Jardins que acolhem. Transforme sua casa em um lugar onde a vida floresce.', whatsapp: '', address: '', hours: '', instagram: '', categories: ['Vasos ornamentais', 'Plantas', 'Composições verdes', 'Acessórios'], adminEmails: [] }, ...(r ? JSON.parse(r.data) : {}) }; }
 async function admin(req) { const id = req.headers.get('oai-authenticated-user-id'); const email = (req.headers.get('oai-authenticated-user-email') || '').toLowerCase(); if (!id || !email)
     return false; if (email === OWNER)
     await db().prepare('INSERT INTO admins(email,user_id) VALUES(?,?) ON CONFLICT(email) DO NOTHING').bind(email, id).run(); const r = await db().prepare('SELECT user_id FROM admins WHERE email=?').bind(email).first(); if (!r)
@@ -18,9 +20,24 @@ function txt(v, max = 200) { return typeof v === 'string' ? v.trim().slice(0, ma
 function image(v) { return typeof v === 'string' && /^\/api\/images\/[a-f0-9-]+\.(jpg|png|webp|gif)$/.test(v); }
 function url(v) { const s = txt(v, 500); return s.startsWith('https://') ? s : ''; }
 async function save(id, kind, data) { await db().prepare('INSERT INTO records(id,kind,data,created) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data').bind(id, kind, JSON.stringify(data), Date.now()).run(); }
+async function validateItems(input) {
+    if (!Array.isArray(input) || input.length > 30) return { error: 'Selecione até 30 produtos.' };
+    const items = [], ids = new Set();
+    for (const item of input) {
+        if (!item || typeof item.id !== 'string' || !Number.isInteger(item.qty) || item.qty < 1 || item.qty > 99 || ids.has(item.id)) return { error: 'Quantidade inválida ou produto repetido.' };
+        ids.add(item.id);
+        const row = await db().prepare("SELECT data FROM records WHERE id=? AND kind='products'").bind(item.id).first();
+        const product = row && JSON.parse(row.data);
+        if (!product?.published || product.stock === 'esgotado' || !Number.isFinite(product.price) || product.price <= 0) return { error: 'Um produto está indisponível ou sem preço. Revise o carrinho.' };
+        items.push({ id: item.id, name: product.name, qty: item.qty, price: product.price });
+    }
+    return { items, total: items.reduce((n, x) => n + Math.round(x.price * 100) * x.qty, 0) / 100 };
+}
 export async function api(req) {
     try {
         const u = new URL(req.url), p = u.pathname.replace(/^\/api\//, '').split('/');
+        const serviceResponse = await publicServiceAPI(req, p);
+        if (serviceResponse) return serviceResponse;
         if (p[0] === 'images' && req.method === 'GET') {
             if (!/^[a-f0-9-]+\.(jpg|png|webp|gif)$/.test(p[1] || ''))
                 return json({ error: 'Imagem inválida' }, 404);
@@ -29,7 +46,32 @@ export async function api(req) {
                 return json({ error: 'Imagem não encontrada' }, 404);
             return new Response(file.body, { headers: { 'Content-Type': file.httpMetadata?.contentType || 'image/jpeg', 'Cache-Control': 'public,max-age=31536000,immutable', 'X-Content-Type-Options': 'nosniff' } });
         }
+        if (p[0] === 'quote' && req.method === 'POST') {
+            if (req.headers.get('origin') !== u.origin) return json({ error: 'Origem inválida' }, 403);
+            const b = await req.json();
+            const checked = await validateItems(b.items);
+            return json(checked, checked.error ? 409 : 200);
+        }
         if (p[0] === 'catalog' && req.method === 'GET') {
+            if (u.searchParams.has('page')) {
+                const q = u.searchParams, page = Math.max(1, Math.min(100000, parseInt(q.get('page')) || 1));
+                let where = "kind='products' AND CAST(json_extract(data,'$.published') AS TEXT) IN ('true','1')";
+                const args = [];
+                if (q.get('category')) { where += " AND json_extract(data,'$.category')=?"; args.push(q.get('category')); }
+                if (q.get('q')) { where += " AND LOWER(json_extract(data,'$.name') || ' ' || COALESCE(json_extract(data,'$.description'),'')) LIKE ?"; args.push('%' + q.get('q').toLowerCase().slice(0,120) + '%'); }
+                for (const [key, op] of [['min','>='],['max','<=']]) if (q.get(key) && Number.isFinite(Number(q.get(key)))) { where += ` AND CAST(json_extract(data,'$.price') AS REAL) ${op} ?`; args.push(Number(q.get(key))); }
+                const order = q.get('sort') === 'menor' ? "CAST(json_extract(data,'$.price') AS REAL) ASC" : q.get('sort') === 'maior' ? "CAST(json_extract(data,'$.price') AS REAL) DESC" : "CASE WHEN CAST(json_extract(data,'$.featured') AS TEXT) IN ('true','1') THEN 0 ELSE 1 END,created DESC";
+                const result = await db().prepare(`SELECT id,data,created FROM records WHERE ${where} ORDER BY ${order},id LIMIT 12 OFFSET ?`).bind(...args,(page-1)*12).all();
+                const count = await db().prepare(`SELECT COUNT(*) as n FROM records WHERE ${where}`).bind(...args).first();
+                const cats = await db().prepare("SELECT DISTINCT json_extract(data,'$.category') as category FROM records WHERE kind='products' AND CAST(json_extract(data,'$.published') AS TEXT) IN ('true','1')").all();
+                const s = await settings(); delete s.adminEmails;
+                return json({ settings:s, products:result.results.map(r=>publicProduct({...JSON.parse(r.data),id:r.id,created:r.created})), total:Number(count.n), page, categories:cats.results.map(x=>x.category).filter(Boolean), projects:(await rows('projects')).filter(x=>x.published).map(x=>({id:x.id,name:x.name,description:x.description,images:x.images,location:x.location})) });
+            }
+            if (p[1]) {
+                const r = await db().prepare("SELECT id,data,created FROM records WHERE id=? AND kind='products'").bind(p[1]).first();
+                const product = r && JSON.parse(r.data);
+                return product?.published ? json(publicProduct({...product,id:r.id,created:r.created})) : json({error:'Produto não encontrado.'},404);
+            }
             const [s, products, projects] = await Promise.all([settings(), rows('products'), rows('projects')]);
             delete s.adminEmails;
             // Dados públicos e iguais para todos: o CDN pode servir a mesma resposta por 30s (e uma versão antiga por até 2 min enquanto renova).
@@ -49,10 +91,21 @@ export async function api(req) {
             const recent = await db().prepare("SELECT COUNT(*) as n FROM records WHERE kind='inquiries' AND created>? AND json_extract(data,'$.ip')=?").bind(Date.now() - 3600000, hash).first();
             if (recent.n >= 8)
                 return json({ error: 'Limite de solicitações atingido. Tente mais tarde.' }, 429);
-            const products = await rows('products');
-            const items = (Array.isArray(b.items) ? b.items : []).slice(0, 30).map((x) => { const product = products.find((y) => y.id === x.id && y.published && y.stock !== 'esgotado'); return product ? { id: product.id, name: product.name, qty: Math.max(1, Math.min(99, Number(x.qty) || 1)), price: product.price } : null; }).filter(Boolean);
-            const id = crypto.randomUUID();
-            await save(id, 'inquiries', { name, phone, message, items, status: 'nova', ip: hash });
+            const checked = await validateItems(b.items || []);
+            if (checked.error) return json(checked, 409);
+            const { items } = checked;
+            if (items.some((x, i) => b.items[i].price !== x.price)) return json({ error: 'Os preços mudaram. Confira novamente o carrinho.', items }, 409);
+            const requestId = txt(b.requestId, 36);
+            if (requestId && !/^[a-f0-9-]{36}$/.test(requestId)) return json({ error: 'Referência inválida.' }, 400);
+            const id = requestId || crypto.randomUUID();
+            const payload = { name, phone, message, items, status: 'nova', ip: hash };
+            const previous = await db().prepare("SELECT data FROM records WHERE id=? AND kind='inquiries'").bind(id).first();
+            if (previous) {
+                const old = JSON.parse(previous.data);
+                if (old.name !== name || old.phone !== phone || old.message !== message || JSON.stringify(old.items) !== JSON.stringify(items)) return json({ error: 'Referência já utilizada para outra solicitação.' }, 409);
+                return json({ id });
+            }
+            await db().prepare('INSERT INTO records(id,kind,data,created) VALUES(?,?,?,?) ON CONFLICT(id) DO NOTHING').bind(id, 'inquiries', JSON.stringify(payload), Date.now()).run();
             return json({ id });
         }
         if (p[0] === 'me')
@@ -64,6 +117,8 @@ export async function api(req) {
         const invoiceResponse = await invoiceAPI(req, p);
         if (invoiceResponse)
             return invoiceResponse;
+        const adminServiceResponse = await adminServiceAPI(req, p);
+        if (adminServiceResponse) return adminServiceResponse;
         if (p[0] === 'dashboard' && req.method === 'GET') {
             const [s, products, projects, inquiries, invoices] = await Promise.all([settings(), rows('products'), rows('projects'), rows('inquiries'), rows('invoices')]);
             return json({ settings: s, products, projects, invoices, inquiries: inquiries.map(({ ip, ...x }) => x) });
@@ -161,7 +216,7 @@ export async function api(req) {
             const phone = txt(b.whatsapp, 20).replace(/\D/g, '');
             if (phone && !/^55\d{10,11}$/.test(phone))
                 return json({ error: 'Informe WhatsApp com 55 + DDD + número.' }, 400);
-            const data = { name: txt(b.name, 80) || 'Casa Verde', headline: txt(b.headline, 120), description: txt(b.description, 1000), whatsapp: phone, address: txt(b.address, 300), hours: txt(b.hours, 400), instagram: url(b.instagram), categories: (Array.isArray(b.categories) ? b.categories : []).map((x) => txt(x, 60)).filter(Boolean).slice(0, 30), adminEmails: old.adminEmails || [] };
+            const data = { demoShowcase: b.demoShowcase === undefined ? old.demoShowcase !== false : !!b.demoShowcase, name: txt(b.name, 80) || 'Casa Verde', headline: txt(b.headline, 120), description: txt(b.description, 1000), whatsapp: phone, address: txt(b.address, 300), hours: txt(b.hours, 400), instagram: url(b.instagram), categories: (Array.isArray(b.categories) ? b.categories : []).map((x) => txt(x, 60)).filter(Boolean).slice(0, 30), adminEmails: old.adminEmails || [] };
             if ((req.headers.get('oai-authenticated-user-email') || '').toLowerCase() === OWNER) {
                 data.adminEmails = [...new Set((Array.isArray(b.adminEmails) ? b.adminEmails : []).map((x) => txt(x, 200).toLowerCase()).filter((x) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x) && x !== OWNER))].slice(0, 10);
                 const existing = await db().prepare('SELECT email FROM admins').all();
@@ -231,6 +286,7 @@ export async function api(req) {
         return json({ error: 'Rota não encontrada' }, 404);
     }
     catch (e) {
+        if (e instanceof SyntaxError) return json({ error: 'Dados inválidos. Revise sua solicitação.' }, 400);
         console.error('Casa Verde API', e);
         return json({ error: 'Não foi possível concluir. Tente novamente.' }, 500);
     }

@@ -2,14 +2,16 @@
 
 Esta versão tem loja, painel e login próprios. Não usa hospedagem, login ou banco do ChatGPT.
 
+Entrega e operação: consulte `MANUAL-DO-PROPRIETARIO.md`, `CHECKLIST-DE-ENTREGA.md` e `GUIA-DE-PRODUCAO-E-RECUPERACAO.md`. O escopo é catálogo, carrinho, solicitações comerciais e orçamentos automáticos de serviços; não há pagamento automático.
+
 ## Windows: iniciar com dois cliques
 1. Extraia o conteúdo do ZIP em `C:\dev\sitecasaverde`. O package.json deve ficar diretamente nessa pasta.
-2. Instale Node.js 22.13 ou superior (recomendado: Node.js 24 LTS).
+2. Instale Node.js 24 LTS e execute `npm ci` nesta pasta antes de iniciar.
 3. Dê dois cliques em **INICIAR-CASA-VERDE.bat**. Deixe a janela aberta.
 4. Abra http://localhost:5173 e clique em Administrar loja.
-5. No primeiro acesso, crie sua senha (mínimo de 10 caracteres).
+5. Se ainda não houver conta, crie sua senha no primeiro acesso (mínimo de 10 caracteres). Se já houver conta local, use a senha existente; não substitua a pasta `.data`.
 
-O modo local funciona SEM npm install, internet para o backend ou Supabase. O navegador pode precisar de internet para fontes e fotos ilustrativas externas. Fotos de produtos enviados ficam no computador.
+O modo local requer as dependências instaladas por `npm ci`, incluindo o gerador de PDF. Depois da instalação, o backend local não depende do Supabase. Fotos enviadas ficam no computador; as imagens demonstrativas são locais.
 
 **Dados reais locais:** banco SQLite e fotos ficam na pasta `.data`. Faça backup dela inteira; ela não deve ir ao GitHub. Para acessar em outro dispositivo, publique na Vercel com Supabase. Não exponha o servidor local à internet.
 
@@ -45,7 +47,8 @@ No hub existente https://r2sites.vercel.app, cadastre o endereço da implantaç�
 A separação do banco é feita no servidor por schema, não por um filtro de frontend. As tabelas privadas têm RLS ativada e nenhuma permissão para anon/authenticated. A conexão de servidor usa uma credencial privilegiada; trate o proprietário da infraestrutura como administrador das lojas que a compartilham. Para isolamento de credenciais entre clientes, use projetos Supabase separados.
 
 ## Estrutura
-- store.html/store.js: loja pública aprovada.
+- store.html/storefront.js/demo-showcase.js: loja pública e demonstração; store.js é legado preservado.
+- service-storefront.js/service-admin.js: orçamentos na loja e no painel existente.
 - admin.html/admin.js: painel, publicação rápida e CRUD.
 - bulk.js: importação de catálogo.
 - invoice.js: XML, PDF, OCR e revisão de notas.
@@ -59,7 +62,7 @@ A separação do banco é feita no servidor por schema, não por um filtro de fr
 - tests/: testes locais, PostgreSQL e cálculos.
 
 ## Comandos opcionais
-- npm install: instala o cliente PostgreSQL e dependências de teste.
+- npm ci: instala as versões travadas das dependências.
 - npm start: inicia a loja local.
 - npm run build: gera dist.
 - npm test: executa verificações automatizadas (após npm install).
@@ -67,4 +70,4 @@ A separação do banco é feita no servidor por schema, não por um filtro de fr
 O projeto local foi validado com testes de API, login, arquivos, notas, preços e SQL PostgreSQL em PGlite. Não foi realizado deploy em uma conta Vercel/Supabase sua nem teste visual automatizado em navegador Windows. Não há dados de clientes ou credenciais no ZIP.
 
 ## Backup e manutenção
-Faça backup da pasta .data no modo local e configure backups do banco e Storage no modo hospedado. Não substitua dados locais ao atualizar o código. Antes de importar cadastros reais de outra hospedagem, exporte-os: os registros existentes do site ChatGPT não foram copiados automaticamente para este pacote.
+Use `npm run backup:local` para uma cópia consistente do SQLite, credencial e arquivos enviados. Guarde a cópia fora deste computador. No modo hospedado, faça backup do PostgreSQL e dos objetos dos buckets separadamente. Não substitua dados locais ao atualizar o código. Veja o guia de produção e recuperação antes de restaurar qualquer cópia.

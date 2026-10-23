@@ -3,7 +3,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/index.mjs": {
-      "includeFiles": "server/**",
+      "includeFiles": "{server/**,public/brand/casa-verde.png,node_modules/pdfkit/js/data/**}",
       "maxDuration": 60
     }
   },
